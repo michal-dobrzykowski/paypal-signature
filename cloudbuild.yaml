@@ -1,0 +1,38 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "--build-arg"
+      - "PAYPAL_SANDBOX=${_PAYPAL_SANDBOX}"
+      - "--build-arg"
+      - "NEXT_PUBLIC_PAYPAL_CLIENT_ID=${_NEXT_PUBLIC_PAYPAL_CLIENT_ID}"
+      - "--build-arg"
+      - "PAYPAL_CLIENT_SECRET=${_PAYPAL_CLIENT_SECRET}"
+      - "--build-arg"
+      - "PAYPAL_AUTH_WEBHOOK_ID=${_PAYPAL_AUTH_WEBHOOK_ID}"
+      - "-t"
+      - "gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA"
+      - "."
+    env:
+      - NODE_ENV=production
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA"
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "beta"
+      - "run"
+      - "deploy"
+      - "web-service-f8cc3c6"
+      - "--image=gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA"
+      - "--region=europe-central2"
+      - "--platform=managed"
+      - "--max-instances=30"
+      - "--allow-unauthenticated"
+      - "--cpu-boost"
+      - "--async"
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1200s
